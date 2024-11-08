@@ -110,7 +110,7 @@ app.delete('/posts/:id', (req: Request, res: Response) => {
   const postIndex = posts.findIndex(post => post.id === postId);
 
   users.splice(postIndex, 1);
-
+  
   res.sendStatus(204);   
 
 });
