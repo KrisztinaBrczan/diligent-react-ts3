@@ -1,8 +1,8 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 
 interface User {
-  id: number;
+  id?: number;
   name: string;
   email: string;
 }
@@ -10,8 +10,8 @@ interface User {
 const Users = () => {
   const queryClient = useQueryClient();
 
-  const [userName, setUserName] = useState<string>("");
-  const [userEmail, setUserEmail] = useState<string>("");
+  const [name, setName] = useState<string>("");
+  const [email, setEmail] = useState<string>("");
 
   const { data: users } = useQuery<User[]>({
     queryFn: async () =>
@@ -19,31 +19,53 @@ const Users = () => {
     queryKey: ["users"],
   });
 
+  const createUserMutation = useMutation({
+    mutationFn: async (newUser: User) => {
+      fetch("http://localhost:3000/users", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(newUser),
+      }).then((res) => res.json());
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["users"],
+      });
+    },
+  });
+
+  const handleCreateUser = () => {
+    createUserMutation.mutate({ name, email });
+    setName("");
+    setEmail("");
+  };
+
   return (
     <>
       <input
         type="text"
         placeholder="user"
         name="user"
-        value={userName}
-        onChange={(e) => setUserName(e.target.value)}
+        value={name}
+        onChange={(e) => setName(e.target.value)}
       />
       <input
         type="text"
         placeholder="email"
         name="email"
-        value={userEmail}
-        onChange={(e) => setUserEmail(e.target.value)}
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
       />
-      <button>Create User</button>
-      {users &&
-        users.map((user) => (
-          <div key={user.id}>
-            <h2>{user.name}</h2>
-            <p>{user.email}</p>
-            <button>DELETE</button>
-          </div>
-        ))}
+      <button onClick={handleCreateUser}>Create User</button>
+      {users?.map((user) => (
+        <div key={user.id}>
+          <h2>{user.name}</h2>
+          <p>{user.email}</p>
+          <button>DELETE</button>
+        </div>
+      ))}
     </>
   );
 };
