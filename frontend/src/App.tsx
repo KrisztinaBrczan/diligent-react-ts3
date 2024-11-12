@@ -1,12 +1,13 @@
-import Posts from "./components/Posts"
+import { Outlet } from "react-router-dom";
+import Header from "./components/Header";
 
 function App() {
-
   return (
     <>
-      <Posts />
+      <Header />
+      <Outlet />
     </>
-  )
+  );
 }
 
-export default App
+export default App;
