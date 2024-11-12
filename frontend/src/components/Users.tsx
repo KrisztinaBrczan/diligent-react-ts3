@@ -21,7 +21,7 @@ const Users = () => {
 
   const createUserMutation = useMutation({
     mutationFn: async (newUser: User) => {
-      fetch("http://localhost:3000/users", {
+      return fetch("http://localhost:3000/users", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -36,10 +36,28 @@ const Users = () => {
     },
   });
 
+  const deleteUserMutation = useMutation({
+    mutationFn: async (id: number) => {
+      return fetch(`http://localhost:3000/users/${id}`, {
+        method: "Delete",
+        headers: { "Content-Type": "application/json" },
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["users"],
+      });
+    },
+  });
+
   const handleCreateUser = () => {
     createUserMutation.mutate({ name, email });
     setName("");
     setEmail("");
+  };
+
+  const handleDeleteUser = (id: number) => {
+    deleteUserMutation.mutate(id);
   };
 
   return (
@@ -63,7 +81,9 @@ const Users = () => {
         <div key={user.id}>
           <h2>{user.name}</h2>
           <p>{user.email}</p>
-          <button>DELETE</button>
+          <button onClick={() => handleDeleteUser(Number(user.id))}>
+            DELETE
+          </button>
         </div>
       ))}
     </>
