@@ -1,11 +1,11 @@
-import Posts from "./components/Posts";
-import Users from "./components/Users";
+import { Outlet } from "react-router-dom";
+import Header from "./components/Header";
 
 function App() {
   return (
     <>
-      <Posts />
-      <Users />
+      <Header />
+      <Outlet />
     </>
   );
 }

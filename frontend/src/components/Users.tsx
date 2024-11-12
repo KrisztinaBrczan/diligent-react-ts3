@@ -1,7 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
+import User from "./User";
 
-interface User {
+export interface User {
   id?: number;
   name: string;
   email: string;
@@ -12,6 +13,7 @@ const Users = () => {
 
   const [name, setName] = useState<string>("");
   const [email, setEmail] = useState<string>("");
+  const [editingsId, setEditingsId] = useState<number>(0);
 
   const { data: users } = useQuery<User[]>({
     queryFn: async () =>
@@ -50,6 +52,26 @@ const Users = () => {
     },
   });
 
+  const updateUserMutation = useMutation({
+    mutationFn: (updatedUser: User) => {
+      return fetch(`http://localhost:3000/users/${updatedUser.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(updatedUser),
+      }).then((res) => {
+        return res.json();
+      });
+    },
+    onSuccess: () => {
+      console.log("onsuccess");
+      queryClient.invalidateQueries({
+        queryKey: ["users"],
+      });
+    },
+  });
+
   const handleCreateUser = () => {
     createUserMutation.mutate({ name, email });
     setName("");
@@ -58,6 +80,11 @@ const Users = () => {
 
   const handleDeleteUser = (id: number) => {
     deleteUserMutation.mutate(id);
+  };
+
+  const handleSaveUser = (updatedUser: User) => {
+    setEditingsId(0);
+    updateUserMutation.mutate(updatedUser);
   };
 
   return (
@@ -78,13 +105,14 @@ const Users = () => {
       />
       <button onClick={handleCreateUser}>Create User</button>
       {users?.map((user) => (
-        <div key={user.id}>
-          <h2>{user.name}</h2>
-          <p>{user.email}</p>
-          <button onClick={() => handleDeleteUser(Number(user.id))}>
-            DELETE
-          </button>
-        </div>
+        <User
+          user={user}
+          key={user.id}
+          handleDeleteUser={handleDeleteUser}
+          handleSaveUser={handleSaveUser}
+          editingsId={editingsId}
+          setEditingsId={setEditingsId}
+        />
       ))}
     </>
   );
