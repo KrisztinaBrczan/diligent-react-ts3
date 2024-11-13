@@ -69,7 +69,7 @@ app.put("/users/:id", (req: Request, res: Response) => {
   const userId = parseInt(req.params.id);
   const updatedUser: Partial<User> = req.body;
 
-  console.log("updatedUser", updatedUser);
+
   const userIndex = users.findIndex((user) => user.id === userId);
 
   users[userIndex] = {

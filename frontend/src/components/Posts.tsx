@@ -1,8 +1,14 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
+import Post from "./Post";
 
-interface Post {
-  id?: number;
+export interface Post {
+  id: number;
+  title: string;
+  content: string;
+}
+
+interface NewPost {
   title: string;
   content: string;
 }
@@ -12,6 +18,7 @@ const Posts = () => {
 
   const [title, setTitle] = useState<string>("");
   const [content, setContent] = useState<string>("");
+  const [ editId, setEditId ] = useState<number>(0);
 
   const { data: posts } = useQuery<Post[]>({
     queryFn: async () =>
@@ -20,7 +27,7 @@ const Posts = () => {
   });
 
   const createPostMutation = useMutation({
-    mutationFn: async (newPost: Post) => {
+    mutationFn: async (newPost: NewPost) => {
       await fetch("http://localhost:3000/posts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -48,17 +55,35 @@ const Posts = () => {
     },
   });
 
+  const updatePostMutation = useMutation({
+    mutationFn: async (updatedPost: Post) => {
+      await fetch(`http://localhost:3000/posts/${updatedPost.id}`, {
+        method: "PUT",
+        headers: {"Content-Type" : "application/json"},
+        body: JSON.stringify({title: updatedPost.title, content: updatedPost.content})
+      }).then((res) => res.json())
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["posts"]
+      })
+    }
+  })
+
   const handleCreatePost = () => {
     createPostMutation.mutate({ title, content });
-    console.log("haho");
     setTitle("");
     setContent("");
   };
 
   const handleDeletePost = (id: number) => {
-    console.log("id", id);
     deletePostMutation.mutate(id);
   };
+
+  const handleSavePost = (updatedPost: Post) => {
+    updatePostMutation.mutate(updatedPost)
+    setEditId(0)
+  }
 
   return (
     <>
@@ -79,13 +104,14 @@ const Posts = () => {
       <button onClick={handleCreatePost}>Create Post</button>
       {posts &&
         posts.map((post) => (
-          <div key={post.id}>
-            <h2>{post.title}</h2>
-            <p>{post.content}</p>
-            <button onClick={() => handleDeletePost(Number(post.id))}>
-              DELETE
-            </button>
-          </div>
+          <Post 
+            key={post.id} 
+            post={post} 
+            handleDeletePost={handleDeletePost} 
+            editId = {editId}
+            setEditId = {setEditId}
+            handleSavePost = {handleSavePost}
+          />
         ))}
     </>
   );

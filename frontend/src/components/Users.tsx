@@ -65,7 +65,6 @@ const Users = () => {
       });
     },
     onSuccess: () => {
-      console.log("onsuccess");
       queryClient.invalidateQueries({
         queryKey: ["users"],
       });
